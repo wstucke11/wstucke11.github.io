@@ -76,5 +76,16 @@
       open:now-Date.parse(feed.as_of)>120000?null:feed.series.filter(r=>windowStatus(r,feed,now,online)==='OPEN AT SNAPSHOT').length,
       signals:feed.series.filter(r=>signalState(r,feed)!=='NO_SIGNAL').length};
   }
-  return {validate,freshness,windowStatus,signalState,filterSeries,totals};
+  function combineLiveBatches(batches,now=Date.now()){
+    if(!Array.isArray(batches)||batches.length<1||batches.length>36)throw Error('Invalid batch count');
+    const series=[];let oldest=Infinity;
+    for(const input of batches){
+      const batch=validate(input,now),time=Date.parse(batch.as_of);
+      if(now-time>35000||time-now>60000)throw Error('Live batch timestamp stale');
+      oldest=Math.min(oldest,time);
+      series.push(...batch.series);
+    }
+    return validate({...batches[0],series,as_of:new Date(oldest).toISOString()},now);
+  }
+  return {validate,freshness,windowStatus,signalState,filterSeries,totals,combineLiveBatches};
 });

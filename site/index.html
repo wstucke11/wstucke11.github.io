@@ -42,7 +42,7 @@
   </div>
   <div class="kpi-row">
    <article class="metric"><span class="metric-label">DISCOVERED CRYPTO15 SERIES</span><strong id="metric-series">—</strong><span class="metric-foot">Public Kalshi series catalog</span></article>
-   <article class="metric"><span class="metric-label">OPEN WINDOWS AT SNAPSHOT</span><strong id="metric-open">—</strong><span class="metric-foot">Expires with the market</span></article>
+   <article class="metric"><span class="metric-label">SERIES WITH QUOTED MARKET</span><strong id="metric-open">—</strong><span class="metric-foot">Representative contract; not total market count</span></article>
    <article class="metric"><span class="metric-label">PUBLISHED ADDY SIGNALS</span><strong id="metric-signals">—</strong><span class="metric-foot">Independent from listings</span></article>
   </div>
   <div class="section-heading"><div><p class="eyebrow">MARKET WATCH</p><h2>Featured Crypto15 markets</h2></div><a class="text-link" href="#markets">View all markets <span aria-hidden="true">→</span></a></div>
@@ -54,7 +54,7 @@
   <div class="search-toolbar"><label class="search-field"><span aria-hidden="true">⌕</span><span class="sr-only">Search symbols, names, or tickers</span><input id="market-search" type="search" autocomplete="off" placeholder="Search symbol, coin, or ticker…"></label>
    <label class="filter-field"><span>Filter</span><select id="market-filter"><option value="all">All markets</option><option value="signal">With published signal</option><option value="none">No signal yet</option></select></label>
   </div>
-  <div class="catalog-meta"><span id="market-count">No records loaded</span><div class="catalog-tools"><span id="catalog-health" class="status-pill">CHECKING</span><button class="refresh-button" type="button" id="refresh-public">Check published snapshot</button></div></div>
+  <div class="catalog-meta"><span id="market-count">No records loaded</span><div class="catalog-tools"><span id="catalog-health" class="status-pill">CHECKING</span><button class="refresh-button" type="button" id="refresh-public">Check latest quotes</button></div></div>
   <div class="legend"><span><b class="legend-dot purple"></b> NO SIGNAL ≠ PASS</span><span><b class="legend-dot green"></b> BUY requires an issued signal</span><span><b class="legend-dot orange"></b> DON'T BUY does not mean short</span></div>
   <div id="market-grid" class="market-grid"><div class="empty">Loading public market directory…</div></div>
  </section>
@@ -69,17 +69,17 @@
  </section>
  <section class="page" data-page="about" aria-labelledby="about-title" hidden>
   <div class="page-intro"><p class="eyebrow">ABOUT THE PROJECT</p><h1 id="about-title" tabindex="-1">Intelligence without the noise.</h1><p>ADDY Intelligence is a research-driven market intelligence project. This public companion shows independently discovered markets and eligible published observations; the private trading Workspace stays private.</p></div>
-  <div class="two-columns"><article class="panel"><h3>Our principles</h3><p>Availability is not a recommendation. A signal is not a trade. Accuracy is not profit. Unknown or stale evidence is displayed as unknown—not as success.</p></article><article class="panel"><h3>Market data</h3><p>The directory uses the public Kalshi series and market endpoints, and identifies the snapshot time. Newly listed assets are included when the discovery feed refreshes.</p></article></div>
+  <div class="two-columns"><article class="panel"><h3>Our principles</h3><p>Availability is not a recommendation. A signal is not a trade. Accuracy is not profit. Unknown or stale evidence is displayed as unknown—not as success.</p></article><article class="panel"><h3>Market data</h3><p>The directory discovers public Kalshi Crypto15 series through GitHub Pages and checks current contract bid/ask quotes through a separate, public-only Cloudflare relay. These are contract prices, not cryptocurrency spot prices. A multi-asset series may have many open contracts; the card shows one representative contract only.</p></article></div>
   <div class="faq"><h2>Frequently asked questions</h2>
    <details><summary>What do BUY, DON'T BUY, PASS and NO SIGNAL mean?</summary><p>BUY and DON'T BUY require published ADDY assessments; DON'T BUY does not mean SELL or SHORT. PASS means ADDY explicitly abstained after assessment. NO SIGNAL means no published assessment exists. No approved public signals have been published.</p></details>
    <details><summary>Does seeing an asset mean it can be traded automatically?</summary><p>No. Listing a market does not enable trading, authorize an asset, or change private execution permissions.</p></details>
-   <details><summary>How frequently does this page update?</summary><p>GitHub Actions attempts to publish a public Kalshi snapshot about every five minutes, but runs and deployments may be delayed. Your browser checks the latest published snapshot about every 90 seconds while visible; Check published snapshot does not fetch new prices from Kalshi. Contract quotes expire after two minutes, and the market series directory becomes stale after ten minutes. This is delayed discovery, not a real-time trading feed.</p></details>
+   <details><summary>How frequently does this page update?</summary><p>When the public relay is healthy, the app checks Kalshi contract quotes about every 18 seconds, with roughly 10 seconds of edge caching. Quote ages and source coverage are shown. Live quotes stop appearing current after 30 seconds. If the relay fails, the site uses GitHub's approximately five-minute published directory, clearly marked as delayed. Neither source is a guaranteed real-time exchange feed, and missing or incomplete market responses are not treated as successful quotes.</p></details>
    <details><summary>How can I install the app?</summary><p>Use the Install App button if your browser offers installation. On iPhone use Share → Add to Home Screen. This public website uses HTTPS and supports Add to Home Screen.</p></details>
   </div>
-  <button class="secondary" id="refresh-about" type="button">Check published snapshot</button>
+  <button class="secondary" id="refresh-about" type="button">Check latest quotes</button>
  </section>
 </main>
-<footer class="footer"><div><strong>ADDY INTELLIGENCE</strong><span>PUBLIC SITE · NO LIVE ACCOUNT ACCESS</span></div><p>Market data can be delayed. Predictions are uncertain. No trading access or private information is provided.</p><span>Build <code>f370f22f04d12f89</code></span></footer>
+<footer class="footer"><div><strong>ADDY INTELLIGENCE</strong><span>PUBLIC SITE · NO LIVE ACCOUNT ACCESS</span></div><p>Market data can be delayed. Predictions are uncertain. No trading access or private information is provided.</p><span>Build <code>27ae2355fac36c1e</code></span></footer>
 <nav class="mobile-nav" aria-label="Mobile navigation"><a data-nav href="#home"><span>⌂</span>Home</a><a data-nav href="#markets"><span>▦</span>Markets</a><a data-nav href="#performance"><span>▥</span>Results</a><a data-nav href="#insights"><span>◇</span>Insights</a><a data-nav href="#about"><span>ⓘ</span>About</a></nav>
 <div id="install-help" class="install-help" hidden role="dialog" aria-label="Install ADDY"><div><strong>Install ADDY</strong><button id="install-close" type="button" aria-label="Close install instructions">×</button></div><p>In Safari on iPhone: Share → Add to Home Screen. In Chrome/Edge: use the browser's Install App option when available.</p></div>
 </div>

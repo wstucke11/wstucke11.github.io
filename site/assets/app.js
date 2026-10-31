@@ -1,7 +1,8 @@
 'use strict';
-const ADDY_BUILD_ID='f370f22f04d12f89';
+const ADDY_BUILD_ID='27ae2355fac36c1e';
 const M=AddyPublicModel, el=id=>document.getElementById(id);
-let catalog=null,loading=false,filterMode='all',searchText='',installPrompt=null;
+const LIVE_ORIGIN='https://addy-public-kalshi-quotes.incandescent-bearskin.workers.dev';
+let catalog=null,sourceMode='UNAVAILABLE',sourceCoverage=null,loading=false,filterMode='all',searchText='',installPrompt=null;
 let installRegistration=null;
 const PAGE_NAMES=['home','markets','performance','insights','about'];
 const FEATURED=['BTC','ETH','SOL','XRP'];
@@ -16,23 +17,32 @@ function formatAt(value){
   return new Date(value).toLocaleString([], {month:'short',day:'numeric',hour:'numeric',minute:'2-digit',timeZoneName:'short'});
 }
 function statusText(){
-  return M.freshness(catalog,Date.now(),navigator.onLine);
+  const basic=M.freshness(catalog,Date.now(),navigator.onLine);
+  if(basic!=='RECENT SNAPSHOT')return basic;
+  if(sourceMode==='LIVE'){
+    if(Date.now()-Date.parse(catalog.as_of)>30000)return 'STALE';
+    return sourceCoverage?.ok===sourceCoverage?.total?'LIVE':'PARTIAL';
+  }
+  return 'PUBLISHED';
 }
 function statusLabel(){
   const status=statusText();
-  if(status==='RECENT SNAPSHOT')return 'RECENT PUBLIC SNAPSHOT';
+  if(status==='LIVE')return 'LIVE VENUE QUOTES';
+  if(status==='PARTIAL')return 'PARTIAL VENUE COVERAGE';
+  if(status==='PUBLISHED')return 'DELAYED PUBLISHED SNAPSHOT';
   if(status==='STALE')return 'DATA STALE';
   if(status==='OFFLINE')return 'OFFLINE';
   return 'PUBLIC DATA UNAVAILABLE';
 }
 function renderStatus(){
   const status=statusText();
-  el('connection-label').textContent=status==='RECENT SNAPSHOT'?'Public snapshot':status==='STALE'?'Snapshot outdated':status==='OFFLINE'?'Offline':'Public feed unavailable';
-  document.querySelector('.live-dot').className='live-dot'+(status==='RECENT SNAPSHOT'?' recent':'');
+  el('connection-label').textContent=status==='LIVE'?'Live Kalshi data':status==='PARTIAL'?'Partial market data':status==='PUBLISHED'?'Published snapshot':status==='STALE'?'Data outdated':status==='OFFLINE'?'Offline':'Feed unavailable';
+  document.querySelector('.live-dot').className='live-dot'+(status==='LIVE'?' recent':'');
   el('as-of').textContent=catalog?'Captured '+formatAt(catalog.as_of):'Source time unavailable';
   const age=catalog?Math.max(0,Math.floor((Date.now()-Date.parse(catalog.as_of))/1000)):null;
-  el('catalog-health').textContent=statusLabel()+(age===null?'':' · '+Math.floor(age/60)+'m '+String(age%60).padStart(2,'0')+'s old');
-  el('catalog-health').className='status-pill'+(status==='RECENT SNAPSHOT'?' fresh':'');
+  const covered=sourceCoverage?' · '+sourceCoverage.ok+'/'+sourceCoverage.total+' markets checked':'';
+  el('catalog-health').textContent=statusLabel()+covered+(age===null?'':' · '+Math.floor(age/60)+'m '+String(age%60).padStart(2,'0')+'s old');
+  el('catalog-health').className='status-pill'+(status==='LIVE'?' fresh':'');
 }
 function renderCard(record){
   const card=dom('article',null,'market-card');
@@ -44,7 +54,8 @@ function renderCard(record){
   card.append(heading);
   const signal=dom('span','NO SIGNAL','signal-tag no-signal');
   signal.setAttribute('aria-label','No published ADDY signal');
-  const win=M.windowStatus(record,catalog,Date.now(),navigator.onLine);
+  const quoteAge=catalog?Date.now()-Date.parse(catalog.as_of):Infinity;
+  const win=sourceMode==='LIVE'&&quoteAge>30000?'QUOTE STALE':M.windowStatus(record,catalog,Date.now(),navigator.onLine);
   const windowState=dom('span',win,'window-tag'+(win==='OPEN AT SNAPSHOT'?' opened':''));
   const bands=dom('div',null,'status-bands');bands.append(signal,windowState);card.append(bands);
   if(record.window&&win==='OPEN AT SNAPSHOT'){
@@ -52,7 +63,8 @@ function renderCard(record){
     if(record.window.yes_bid_dollars)quote.append(dom('span','YES bid $'+record.window.yes_bid_dollars,'quote-value'));
     if(record.window.yes_ask_dollars)quote.append(dom('span','YES ask $'+record.window.yes_ask_dollars,'quote-value'));
     if(quote.childElementCount)card.append(quote);
-    card.append(dom('p','Window closes '+formatAt(record.window.close_time),'card-note'));
+    card.append(dom('p',(sourceMode==='LIVE'?'Kalshi quote checked recently':'Delayed published quote')+' · Window closes '+formatAt(record.window.close_time),'card-note'));
+    if(record.kind==='multi_asset')card.append(dom('p','Representative contract only; this series may contain multiple simultaneous markets.','card-note'));
   }else{
     card.append(dom('p','Window data is not currently verified. No price or trading signal is implied.','card-note'));
   }
@@ -72,10 +84,10 @@ function fillCards(host,records,emptyMessage){
 }
 function render(){
   renderStatus();
-  const rows=catalog?.series||[],recent=statusText()==='RECENT SNAPSHOT';
+  const rows=catalog?.series||[],recent=['LIVE','PARTIAL','PUBLISHED'].includes(statusText());
   const metrics=M.totals(catalog,Date.now(),navigator.onLine);
   el('metric-series').textContent=metrics.series===null?'—':String(metrics.series);
-  el('metric-open').textContent=metrics.open===null?'—':String(metrics.open);
+  el('metric-open').textContent=sourceMode==='LIVE'&&sourceCoverage?.ok!==sourceCoverage?.total?'—':metrics.open===null?'—':String(metrics.open);
   el('metric-signals').textContent=metrics.signals===null?'—':String(metrics.signals);
   const preferred=FEATURED.map(k=>rows.find(r=>r.symbol===k)).filter(Boolean);
   const featured=[...preferred,...rows.filter(r=>!preferred.includes(r)&&r.kind==='asset')].slice(0,4);
@@ -90,20 +102,39 @@ function render(){
     if(!recent)card.setAttribute('data-stale','true');
   }
 }
+async function fetchLiveVenue(){
+  const batches=[];let ok=0,total=0,groupCount=null;
+  for(let index=0;index<(groupCount??1);index++){
+    const response=await fetch(LIVE_ORIGIN+'/v1/live/'+index,{mode:'cors',cache:'no-store',redirect:'error',signal:AbortSignal.timeout(15000)});
+    if(!response.ok)throw Error('LIVE_HTTP_'+response.status);
+    const batch=M.validate(await response.json());
+    const count=Number(response.headers.get('X-ADDY-Group-Count'));
+    if(!Number.isInteger(count)||count<1||count>36||groupCount!==null&&count!==groupCount)throw Error('LIVE_GROUP_COUNT_INVALID');
+    groupCount=count;
+    const coverage=response.headers.get('X-ADDY-Market-Coverage')||'';
+    if(!/^\d+\/\d+$/.test(coverage))throw Error('LIVE_COVERAGE_INVALID');
+    const [good,expected]=coverage.split('/').map(Number);
+    if(expected!==batch.series.length||good>expected||good<1)throw Error('LIVE_COVERAGE_CONTRACT');
+    batches.push(batch);ok+=good;total+=expected;
+    if(index+1<groupCount)await new Promise(resolve=>setTimeout(resolve,1800));
+  }
+  return {feed:M.combineLiveBatches(batches),coverage:{ok,total}};
+}
 async function loadCatalog(){
   if(loading)return;
-  loading=true;el('connection-label').textContent='Checking published snapshot…';
-  try{
-    const response=await fetch('/public_catalog.json',{cache:'no-store',redirect:'error'});
-    if(!response.ok)throw Error('HTTP_'+response.status);
-    const content=await response.json();
-    catalog=M.validate(content);
-  }catch(e){
-    // Keep the last verified snapshot with its original timestamp. Never relabel it fresh.
-    // Freshness/quote TTLs continue to expire naturally if the host or venue fails.
-  }finally{
-    loading=false;render();
+  loading=true;el('connection-label').textContent='Checking Kalshi quotes…';
+  let live=null;
+  try{live=await fetchLiveVenue()}catch(e){/* Preserve the independent public fallback. */}
+  if(live){
+    catalog=live.feed;sourceCoverage=live.coverage;sourceMode='LIVE';
+  }else if(!catalog||sourceMode!=='LIVE'||Date.now()-Date.parse(catalog.as_of)>30000){
+    try{
+      const response=await fetch('/public_catalog.json',{cache:'no-store',redirect:'error'});
+      if(!response.ok)throw Error('SNAPSHOT_HTTP_'+response.status);
+      catalog=M.validate(await response.json());sourceMode='PUBLISHED';sourceCoverage=null;
+    }catch(e){/* Never reset or relabel a previously verified observation. */}
   }
+  loading=false;render();
 }
 function showPage(focus=false){
   const requested=(location.hash||'#home').slice(1).split('/')[0];
@@ -162,4 +193,4 @@ async function checkBuild(){
 }
 showPage();render();loadCatalog();registerWorker().then(checkBuild);
 setInterval(()=>{if(!document.hidden)render()},15000);
-setInterval(()=>{if(!document.hidden)loadCatalog()},90000);
+setInterval(()=>{if(!document.hidden)loadCatalog()},18000);
