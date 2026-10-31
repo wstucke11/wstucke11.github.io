@@ -1,0 +1,46 @@
+name: Publish ADDY public PWA
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+  schedule:
+    # GitHub schedules may be delayed. Never label an aged quote as live.
+    - cron: '2-59/5 * * * *'
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: addy-public-pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Publish sanitized public market snapshot
+    runs-on: ubuntu-latest
+    timeout-minutes: 9
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout public repository only
+        uses: actions/checkout@v4
+      - name: Python for public Kalshi source
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Refresh public-only Crypto15 snapshot
+        run: python -B scripts/refresh_public_catalog.py
+      - name: Reject private content or corrupted assets
+        run: python -B scripts/verify_public_release.py
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+      - name: Upload public static site only
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: site
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
