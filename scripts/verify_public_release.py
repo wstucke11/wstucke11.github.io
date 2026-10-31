@@ -50,6 +50,7 @@ def verify():
         if digest != hashes[route]: raise ValueError("WORKER_SHELL_HASH_MISMATCH: "+route)
     version=json.loads((SITE/"version.json").read_text("utf8"))
     if not re.fullmatch(r"[0-9a-f]{16}",version.get("build_id","")):raise ValueError("INVALID_BUILD_ID")
+    if version.get("live_deployment") is not True:raise ValueError("PUBLIC_VERSION_MUST_REPORT_LIVE")
     print(json.dumps({"public_only":True,"files":len(actual),"build_id":version["build_id"],"signals":0,"performance":"UNPUBLISHED","catalog_status":feed["catalog_status"],"quotes_ttl_seconds":120,"series_ttl_seconds":600}))
 if __name__ == "__main__":
     verify()
