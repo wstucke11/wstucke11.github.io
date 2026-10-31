@@ -1,7 +1,7 @@
 'use strict';
-const ADDY_BUILD_ID='27ae2355fac36c1e';
+const ADDY_BUILD_ID='b81d2b02de3e21e5';
 const M=AddyPublicModel, el=id=>document.getElementById(id);
-const LIVE_ORIGIN='https://addy-public-kalshi-quotes.incandescent-bearskin.workers.dev';
+const LIVE_ORIGIN='https://addy-public-kalshi-quotes.addy-intelligence-wstucke11.workers.dev';
 let catalog=null,sourceMode='UNAVAILABLE',sourceCoverage=null,loading=false,filterMode='all',searchText='',installPrompt=null;
 let installRegistration=null;
 const PAGE_NAMES=['home','markets','performance','insights','about'];
