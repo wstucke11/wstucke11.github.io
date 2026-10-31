@@ -19,3 +19,13 @@ The public signal feed remains explicitly unpublished until approved evidence an
 - GitHub Actions validates the published assets and feed schema on every deployment.
 
 To run the source checks on Windows, use `py -3 -B scripts\\verify_public_release.py`. The generated public site works over HTTPS and supports PWA installation where permitted by the device/browser.
+
+## Public PredictOS research (October 31, 2026)
+
+This release uses the approved purple desktop/mobile visual source and the five-tab Home / Markets / Performance / Insights / About navigation. It does **not** use the illustrative prices, BUY calls, fabricated results or example stories from the original design prototype.
+
+A separate sanitized **provisional research** feed is available through the read-only Cloudflare GET /v1/addy route, stored in an ADDY_PUBLIC_RESEARCH KV namespace. The publisher on WilliamsLaptop reads canonical ADDY final decisions in SQLite mode=ro, allowlists only timestamped public research fields, and uploads a snapshot every 2 minutes while the user session and Cloudflare authentication remain available. The source is labeled NOT_INDEPENDENTLY_ATTESTED. YES/NO/PASS research is **not** an approved public BUY/DON'T BUY/PASS signal, trading authorization, realized accuracy statistic, or independently authenticated prediction origin. PASS is an abstention, not a win.
+
+Kalshi contract quotes continue to come only from the public Kalshi REST relay. A focused series can be checked via GET /v1/quote/<ticker> with approximately a two-to-three-second cache when the market page is visible; full market coverage uses batched GET /v1/live/N requests and a 10-second cache. Rate limits, network delay, poll intervals and publishing gaps mean neither feed is a guaranteed exchange-grade real-time stream. The browser accurately marks expired quotes, market series with missing source data, and stale/absent PredictOS records.
+
+No account balances, trading orders, credentials, private Guardian controls, private runtime endpoints, or strategy implementation are published. Approved performance and public trading signals remain unavailable pending independent evidence and reconciliation.

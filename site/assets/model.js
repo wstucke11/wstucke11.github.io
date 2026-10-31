@@ -87,5 +87,54 @@
     }
     return validate({...batches[0],series,as_of:new Date(oldest).toISOString()},now);
   }
-  return {validate,freshness,windowStatus,signalState,filterSeries,totals,combineLiveBatches};
+  const RESEARCH_TOP=['schema_version','schema','source','generated_at','source_observed_at','source_state','source_verification','authority','approved_signals','performance','latest','recent_directional'];
+  const RESEARCH_KEYS=['public_id','asset','series_ticker','market_ticker','observed_at','expires_at','decision','market_state','evidence_status'];
+  const RESEARCH_ASSETS=new Set(['BTC','ETH','SOL','XRP','DOGE','BNB','HYPE','NEAR','ZEC']);
+  function validateResearch(payload,now=Date.now()){
+    if(!exact(payload,RESEARCH_TOP)||payload.schema_version!==1||payload.schema!=='addy.public.research.v1'||
+      payload.source!=='PREDICTOS_LOCAL_FINALS_READ_ONLY'||payload.authority!=='RESEARCH_OBSERVATIONS_ONLY'||
+      payload.source_verification!=='NOT_INDEPENDENTLY_ATTESTED'||payload.approved_signals!==false||
+      payload.performance!==null||!['UNAVAILABLE','RECENT','STALE'].includes(payload.source_state)||
+      !validTime(payload.generated_at)||Date.parse(payload.generated_at)>now+60000||
+      (payload.source_observed_at!==null&&!validTime(payload.source_observed_at))||
+      !Array.isArray(payload.latest)||payload.latest.length>9||
+      !Array.isArray(payload.recent_directional)||payload.recent_directional.length>25)
+      throw Error('Invalid provisional public research');
+    const known=new Set(),latest=new Set(),hist=new Set();
+    for(const [type,rows] of [['latest',payload.latest],['recent',payload.recent_directional]]){
+      for(const r of rows){
+        if(!exact(r,RESEARCH_KEYS)||typeof r.public_id!=='string'||!/^[0-9a-f]{20}$/.test(r.public_id)||
+          !RESEARCH_ASSETS.has(r.asset)||r.series_ticker!=='KX'+r.asset+'15M'||
+          typeof r.market_ticker!=='string'||!WINDOW.test(r.market_ticker)||
+          !r.market_ticker.startsWith(r.series_ticker+'-')||
+          !validTime(r.observed_at)||!validTime(r.expires_at)||
+          Date.parse(r.observed_at)>=Date.parse(r.expires_at)||
+          !['YES','NO','PASS'].includes(r.decision)||
+          !['CURRENT','EXPIRED'].includes(r.market_state)||
+          r.evidence_status!=='SOURCE_NOT_INDEPENDENTLY_ATTESTED')
+          throw Error('Invalid research observation');
+        if(type==='latest'){
+          if(latest.has(r.asset))throw Error('Duplicate public asset');
+          latest.add(r.asset);
+        }else{
+          if(r.decision==='PASS'||hist.has(r.public_id))throw Error('Invalid directional history');
+          hist.add(r.public_id);
+        }
+        known.add(r.public_id);
+      }
+    }
+    if(payload.source_observed_at===null&&known.size)throw Error('Missing source date');
+    return payload;
+  }
+  function researchFreshness(data,now=Date.now(),online=true){
+    if(!online)return 'OFFLINE';
+    if(!data)return 'UNAVAILABLE';
+    if(!data.source_observed_at)return 'NO_OBSERVATIONS';
+    const publishAge=now-Date.parse(data.generated_at);
+    const sourceAge=now-Date.parse(data.source_observed_at);
+    if(!Number.isFinite(publishAge)||publishAge>600000||publishAge< -60000)return 'PUBLISHER_STALE';
+    if(!Number.isFinite(sourceAge)||sourceAge>300000||sourceAge< -60000)return 'SOURCE_STALE';
+    return 'PROVISIONAL';
+  }
+  return {validate,freshness,windowStatus,signalState,filterSeries,totals,combineLiveBatches,validateResearch,researchFreshness};
 });
