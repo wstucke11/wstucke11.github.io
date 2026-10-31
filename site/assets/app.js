@@ -1,5 +1,5 @@
 'use strict';
-const ADDY_BUILD_ID='25f153a6f73aa7d8';
+const ADDY_BUILD_ID='f370f22f04d12f89';
 const M=AddyPublicModel, el=id=>document.getElementById(id);
 let catalog=null,loading=false,filterMode='all',searchText='',installPrompt=null;
 let installRegistration=null;
@@ -30,7 +30,8 @@ function renderStatus(){
   el('connection-label').textContent=status==='RECENT SNAPSHOT'?'Public snapshot':status==='STALE'?'Snapshot outdated':status==='OFFLINE'?'Offline':'Public feed unavailable';
   document.querySelector('.live-dot').className='live-dot'+(status==='RECENT SNAPSHOT'?' recent':'');
   el('as-of').textContent=catalog?'Captured '+formatAt(catalog.as_of):'Source time unavailable';
-  el('catalog-health').textContent=statusLabel();
+  const age=catalog?Math.max(0,Math.floor((Date.now()-Date.parse(catalog.as_of))/1000)):null;
+  el('catalog-health').textContent=statusLabel()+(age===null?'':' · '+Math.floor(age/60)+'m '+String(age%60).padStart(2,'0')+'s old');
   el('catalog-health').className='status-pill'+(status==='RECENT SNAPSHOT'?' fresh':'');
 }
 function renderCard(record){
@@ -91,14 +92,15 @@ function render(){
 }
 async function loadCatalog(){
   if(loading)return;
-  loading=true;el('connection-label').textContent='Refreshing snapshot…';
+  loading=true;el('connection-label').textContent='Checking published snapshot…';
   try{
     const response=await fetch('/public_catalog.json',{cache:'no-store',redirect:'error'});
     if(!response.ok)throw Error('HTTP_'+response.status);
     const content=await response.json();
     catalog=M.validate(content);
   }catch(e){
-    catalog=null;
+    // Keep the last verified snapshot with its original timestamp. Never relabel it fresh.
+    // Freshness/quote TTLs continue to expire naturally if the host or venue fails.
   }finally{
     loading=false;render();
   }
@@ -122,10 +124,16 @@ el('market-search').addEventListener('input',event=>{searchText=event.target.val
 el('market-filter').addEventListener('change',event=>{filterMode=event.target.value;render()});
 el('refresh-about').addEventListener('click',loadCatalog);
 el('refresh-public').addEventListener('click',loadCatalog);
+el('apply-update').addEventListener('click',async()=>{
+  if(installRegistration?.waiting){
+    navigator.serviceWorker.addEventListener('controllerchange',()=>location.reload(),{once:true});
+    installRegistration.waiting.postMessage({type:'SKIP_WAITING'});
+  }else location.reload();
+});
 window.addEventListener('hashchange',()=>showPage(true));
 window.addEventListener('online',()=>loadCatalog());
 window.addEventListener('offline',render);
-document.addEventListener('visibilitychange',()=>{if(!document.hidden){render();checkBuild();}});
+document.addEventListener('visibilitychange',()=>{if(!document.hidden){render();loadCatalog();checkBuild();}});
 const installHelp=el('install-help');
 el('install-close').addEventListener('click',()=>installHelp.hidden=true);
 el('install-btn').addEventListener('click',async()=>{
@@ -145,9 +153,10 @@ async function checkBuild(){
     const r=await fetch('/version.json',{cache:'no-store',redirect:'error'});
     if(!r.ok)return;
     const data=await r.json();
-    if(typeof data.build_id==='string'&&data.build_id!==ADDY_BUILD_ID&&installRegistration){
-      await installRegistration.update();
-      // No automatic reload while the user is browsing or using the search box.
+    if(typeof data.build_id==='string'&&data.build_id!==ADDY_BUILD_ID){
+      el('update-notice').hidden=false;
+      if(installRegistration)await installRegistration.update();
+      // User can apply the new version without losing edits unexpectedly.
     }
   }catch(e){}
 }

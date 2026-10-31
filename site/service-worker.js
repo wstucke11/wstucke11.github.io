@@ -1,9 +1,9 @@
 'use strict';
-const CACHE_ID = 'addy-public-crypto15-shell-25f153a6f73aa7d8';
+const CACHE_ID = 'addy-public-crypto15-shell-f370f22f04d12f89';
 const CACHE_PREFIX = 'addy-public-crypto15-shell-';
 const SHELL_FILES = ['/', '/offline.html','/assets/app.css','/assets/app.js','/assets/model.js','/manifest.webmanifest','/icons/icon-192.png','/icons/icon-512.png'];
 const PRECACHE_SET = new Set(SHELL_FILES);
-const SHELL_HASHES = {"/": "c9f02f1670cb17cb7de3a0279bc5aa823e3f8bcaf3657c9cd38ff0b92317976b", "/assets/app.css": "7e95745ff660d14b29022dbb69ac624d0a2d4a8b763769575336bb756e11dc8d", "/assets/app.js": "02490bebe4a8db0930e6775ca545a1c4a93d598de51d29eafa8de9383fa925b0", "/assets/model.js": "108315fb5e1527bdf9c8186d760c3c93317df0dee8da1c54139ee8b86f1df76e", "/icons/icon-192.png": "ec4fdc6c8d087a917ad8090368bc72409dd4c38db0f64c21bea8f4cb9f1f344e", "/icons/icon-512.png": "43bdcc94d05a395c7f8ef6d0396770733fdb74961ff9eb8ede7a2a406e3601c9", "/manifest.webmanifest": "d4a47f48f21522e6f95a49b15b1050f4135b6c6d992f1102a2f6e0dc636c5d42", "/offline.html": "592ffed0e9082b09b7e0216b9dfdded7f5c19f8420d37aece420d8779a36e1bc"};
+const SHELL_HASHES = {"/": "d41027a8b66332cafcd91849f014572e4b32ea6b50d1d57f79a49d13d7f1c03e", "/assets/app.css": "7e95745ff660d14b29022dbb69ac624d0a2d4a8b763769575336bb756e11dc8d", "/assets/app.js": "a9f0381f18508ee022252b00f9c0d97e20715b2cdb42c2c3f1ed40340d133bff", "/assets/model.js": "108315fb5e1527bdf9c8186d760c3c93317df0dee8da1c54139ee8b86f1df76e", "/icons/icon-192.png": "ec4fdc6c8d087a917ad8090368bc72409dd4c38db0f64c21bea8f4cb9f1f344e", "/icons/icon-512.png": "43bdcc94d05a395c7f8ef6d0396770733fdb74961ff9eb8ede7a2a406e3601c9", "/manifest.webmanifest": "d4a47f48f21522e6f95a49b15b1050f4135b6c6d992f1102a2f6e0dc636c5d42", "/offline.html": "592ffed0e9082b09b7e0216b9dfdded7f5c19f8420d37aece420d8779a36e1bc"};
 self.addEventListener('install',e=>{
   e.waitUntil((async()=>{
     // Validate the complete release before placing any response in its cache.

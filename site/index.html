@@ -27,6 +27,7 @@
   <div class="top-actions"><span class="connection"><span class="live-dot" aria-hidden="true"></span><span id="connection-label">Loading snapshot</span></span><button class="install-button" id="install-btn" type="button">Install App <span aria-hidden="true">↗</span></button></div>
  </div>
 </header>
+<div id="update-notice" hidden role="status" class="site-note"><span>NEW PUBLIC APP VERSION AVAILABLE</span><button id="apply-update" type="button" class="refresh-button">Update app</button></div>
 <main id="content">
  <div class="site-note"><span><span class="notice-dot" aria-hidden="true"></span> PUBLIC MARKET INTELLIGENCE · READ-ONLY</span><span id="as-of">Checking source</span></div>
  <section class="page" data-page="home" aria-labelledby="home-title">
@@ -53,7 +54,7 @@
   <div class="search-toolbar"><label class="search-field"><span aria-hidden="true">⌕</span><span class="sr-only">Search symbols, names, or tickers</span><input id="market-search" type="search" autocomplete="off" placeholder="Search symbol, coin, or ticker…"></label>
    <label class="filter-field"><span>Filter</span><select id="market-filter"><option value="all">All markets</option><option value="signal">With published signal</option><option value="none">No signal yet</option></select></label>
   </div>
-  <div class="catalog-meta"><span id="market-count">No records loaded</span><div class="catalog-tools"><span id="catalog-health" class="status-pill">CHECKING</span><button class="refresh-button" type="button" id="refresh-public">Refresh snapshot</button></div></div>
+  <div class="catalog-meta"><span id="market-count">No records loaded</span><div class="catalog-tools"><span id="catalog-health" class="status-pill">CHECKING</span><button class="refresh-button" type="button" id="refresh-public">Check published snapshot</button></div></div>
   <div class="legend"><span><b class="legend-dot purple"></b> NO SIGNAL ≠ PASS</span><span><b class="legend-dot green"></b> BUY requires an issued signal</span><span><b class="legend-dot orange"></b> DON'T BUY does not mean short</span></div>
   <div id="market-grid" class="market-grid"><div class="empty">Loading public market directory…</div></div>
  </section>
@@ -72,13 +73,13 @@
   <div class="faq"><h2>Frequently asked questions</h2>
    <details><summary>What do BUY, DON'T BUY, PASS and NO SIGNAL mean?</summary><p>BUY and DON'T BUY require published ADDY assessments; DON'T BUY does not mean SELL or SHORT. PASS means ADDY explicitly abstained after assessment. NO SIGNAL means no published assessment exists. No approved public signals have been published.</p></details>
    <details><summary>Does seeing an asset mean it can be traded automatically?</summary><p>No. Listing a market does not enable trading, authorize an asset, or change private execution permissions.</p></details>
-   <details><summary>How frequently does this page update?</summary><p>The site requests a fresh public snapshot about every 90 seconds while visible and always displays its captured time. Stale quotes expire. Use Refresh to check again.</p></details>
+   <details><summary>How frequently does this page update?</summary><p>GitHub Actions attempts to publish a public Kalshi snapshot about every five minutes, but runs and deployments may be delayed. Your browser checks the latest published snapshot about every 90 seconds while visible; Check published snapshot does not fetch new prices from Kalshi. Contract quotes expire after two minutes, and the market series directory becomes stale after ten minutes. This is delayed discovery, not a real-time trading feed.</p></details>
    <details><summary>How can I install the app?</summary><p>Use the Install App button if your browser offers installation. On iPhone use Share → Add to Home Screen. This public website uses HTTPS and supports Add to Home Screen.</p></details>
   </div>
-  <button class="secondary" id="refresh-about" type="button">Refresh public snapshot</button>
+  <button class="secondary" id="refresh-about" type="button">Check published snapshot</button>
  </section>
 </main>
-<footer class="footer"><div><strong>ADDY INTELLIGENCE</strong><span>PUBLIC SITE · NO LIVE ACCOUNT ACCESS</span></div><p>Market data can be delayed. Predictions are uncertain. No trading access or private information is provided.</p><span>Build <code>25f153a6f73aa7d8</code></span></footer>
+<footer class="footer"><div><strong>ADDY INTELLIGENCE</strong><span>PUBLIC SITE · NO LIVE ACCOUNT ACCESS</span></div><p>Market data can be delayed. Predictions are uncertain. No trading access or private information is provided.</p><span>Build <code>f370f22f04d12f89</code></span></footer>
 <nav class="mobile-nav" aria-label="Mobile navigation"><a data-nav href="#home"><span>⌂</span>Home</a><a data-nav href="#markets"><span>▦</span>Markets</a><a data-nav href="#performance"><span>▥</span>Results</a><a data-nav href="#insights"><span>◇</span>Insights</a><a data-nav href="#about"><span>ⓘ</span>About</a></nav>
 <div id="install-help" class="install-help" hidden role="dialog" aria-label="Install ADDY"><div><strong>Install ADDY</strong><button id="install-close" type="button" aria-label="Close install instructions">×</button></div><p>In Safari on iPhone: Share → Add to Home Screen. In Chrome/Edge: use the browser's Install App option when available.</p></div>
 </div>
